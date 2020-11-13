@@ -20,5 +20,6 @@ namespace API.Context
                 );
         }
         public DbSet<Value> Values { get; set; }
+        public DbSet<Activity> Activities { get; set; }
     }
 }
