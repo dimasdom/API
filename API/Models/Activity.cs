@@ -18,7 +18,7 @@ namespace API.Models
 
         public string Category { get; set; }
 
-        public DateTime Date { get; set; }
+        public DateTime? Date { get; set; }
 
         public string City { get; set; }
         

@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using API.Context;
 using API.Models;
+using MediatR;
+using API.Application;
 
 namespace API.Controllers
 {
@@ -14,25 +16,25 @@ namespace API.Controllers
     [ApiController]
     public class ActivitiesController : ControllerBase
     {
-        private readonly DataContext _context;
+        private IMediator _mediator;
 
-        public ActivitiesController(DataContext context)
+        public ActivitiesController(IMediator mediator)
         {
-            _context = context;
-        }
+            _mediator = mediator;
+        }   
 
         // GET: api/Activities
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Activity>>> GetActivities()
         {
-            return await _context.Activities.ToListAsync();
+            return await _mediator.Send(new List.Query());
         }
 
         // GET: api/Activities/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Activity>> GetActivity(Guid id)
         {
-            var activity = await _context.Activities.FindAsync(id);
+            var activity = await _mediator.Send(new Details.Query{Id=id });
 
             if (activity == null)
             {
@@ -41,51 +43,25 @@ namespace API.Controllers
 
             return activity;
         }
-
+        
         // PUT: api/Activities/5
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutActivity(Guid id, Activity activity)
+        public async Task<ActionResult<Unit>> PutActivity(Guid id, Edit.Command command)
         {
-            if (id != activity.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(activity).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ActivityExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            command.Id = id;
+            return await _mediator.Send(command);
         }
-
         // POST: api/Activities
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [HttpPost]
-        public async Task<ActionResult<Activity>> PostActivity(Activity activity)
+        public async Task<ActionResult<Unit>> Create(Create.Command command)
         {
-            _context.Activities.Add(activity);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetActivity", new { id = activity.Id }, activity);
+            return await _mediator.Send(command);
         }
-
+        /*
         // DELETE: api/Activities/5
         [HttpDelete("{id}")]
         public async Task<ActionResult<Activity>> DeleteActivity(Guid id)
@@ -106,5 +82,6 @@ namespace API.Controllers
         {
             return _context.Activities.Any(e => e.Id == id);
         }
+        */
     }
 }
